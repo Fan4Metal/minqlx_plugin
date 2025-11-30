@@ -1,0 +1,74 @@
+{
+  "untracked": [],
+  "players": [
+    {
+      "steamid": "76561198029055382",
+      "duel": {
+        "games": 0,
+        "elo": 900
+      },
+      "ft": {
+        "games": 0,
+        "elo": 900
+      },
+      "ad": {
+        "games": 0,
+        "elo": 900
+      },
+      "tdm": {
+        "games": 0,
+        "elo": 900
+      },
+      "ca": {
+        "games": 1,
+        "elo": 507
+      },
+      "ctf": {
+        "games": 13,
+        "elo": 1170
+      },
+      "ffa": {
+        "games": 8246,
+        "elo": 1755
+      }
+    }
+  ],
+  "playerinfo": {
+    "76561198029055382": {
+      "deactivated": false,
+      "ratings": {
+        "duel": {
+          "games": 0,
+          "elo": 900
+        },
+        "ft": {
+          "games": 0,
+          "elo": 900
+        },
+        "ad": {
+          "games": 0,
+          "elo": 900
+        },
+        "tdm": {
+          "games": 0,
+          "elo": 900
+        },
+        "ca": {
+          "games": 1,
+          "elo": 507
+        },
+        "ctf": {
+          "games": 13,
+          "elo": 1170
+        },
+        "ffa": {
+          "games": 8246,
+          "elo": 1755
+        }
+      },
+      "allowRating": true,
+      "privacy": "public"
+    }
+  },
+  "deactivated": []
+}
