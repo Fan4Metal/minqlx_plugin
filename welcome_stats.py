@@ -2,7 +2,7 @@
 This is a plugin for minqlx created by Metal Fan (fan4_metal@mail.ru)
 Copyright (c) 2025 Metal Fan
 
-Version 0.2
+Version 0.3
 
 Its purpose is to display welcome message and some information about the players.
 """
@@ -13,13 +13,29 @@ import re
 
 
 class welcome_stats(minqlx.Plugin):
+    SPECIAL_WELCOME_MESSAGES = {
+        76561198258205565: "^2--Волосат и могуч!!--",  # Мамонтенок
+        76561198043699448: "^2--Хрен попадешь!--",  # Xok
+        76561197982376119: "^2--Топ 1 4lenosos сервера!--",  # itsl
+        76561198074185301: "^2--Он вам не китаец!--",  # Кибер
+        76561198257384069: "^2--САШКА - СИЛА!!!--",  # Сашка
+        76561198029055382: "^2--Это админ!--",  # Metal Fan
+        # 76561198000000001: [
+        #     "^7Welcome back, ^5{name}^7!",
+        #     "^3Good luck and have fun!",
+        # ],
+    }
+
     def __init__(self):
         super().__init__()
+        self.center_printed = set()
 
         # Правильная регистрация команды!
         self.add_command(("info", "stats"), self.cmd_info, usage="<id | steam_id>")
 
         self.add_hook("player_connect", self.handle_player_connect, priority=minqlx.PRI_LOWEST)
+        self.add_hook("player_loaded", self.handle_player_loaded, priority=minqlx.PRI_LOWEST)
+        self.add_hook("player_disconnect", self.handle_player_disconnect)
 
     def handle_player_connect(self, player):
         if not player or player.steam_id < 10000000000000000:
@@ -38,9 +54,29 @@ class welcome_stats(minqlx.Plugin):
                 elo = data["elo"]
                 elo_str = f"^3{elo:^4}^7" if elo != "—" else "^1—^7"
                 msg = f"^7Welcome, ^5{name}^7! Tracked games: ^2{games}^7, FFA ELO: {elo_str}"
-            minqlx.CHAT_CHANNEL.reply(msg)
+            self.chat_reply(msg)
+
+            special_msg = self.SPECIAL_WELCOME_MESSAGES.get(sid)
+            if special_msg:
+                self.chat_reply(special_msg, name=name, sid=sid)
 
         fetch()
+
+    def handle_player_loaded(self, player):
+        if not player or player.steam_id < 10000000000000000:
+            return
+
+        sid = player.steam_id
+        special_msg = self.SPECIAL_WELCOME_MESSAGES.get(sid)
+        if not special_msg or sid in self.center_printed:
+            return
+
+        self.center_printed.add(sid)
+        self.delayed_center_print(player, special_msg, name=player.clean_name, sid=sid)
+
+    def handle_player_disconnect(self, player, reason):
+        if player:
+            self.center_printed.discard(player.steam_id)
 
     def cmd_info(self, player, msg, channel):
         if len(msg) < 2:
@@ -80,9 +116,30 @@ class welcome_stats(minqlx.Plugin):
                 elo = data["elo"]
                 elo_str = f"^3{elo:^4}^7" if elo != "—" else "^1—^7"
                 msg = f"^5{name}^7 => Tracked games: ^2{games}^7, FFA ELO: {elo_str}"
-            minqlx.CHAT_CHANNEL.reply(msg)
+            self.chat_reply(msg)
 
         fetch()
+
+    def chat_reply(self, message, **format_kwargs):
+        if isinstance(message, (list, tuple)):
+            lines = message
+        else:
+            lines = str(message).splitlines()
+
+        for line in lines:
+            minqlx.CHAT_CHANNEL.reply(line.format(**format_kwargs))
+
+    def center_print(self, player, message, **format_kwargs):
+        if isinstance(message, (list, tuple)):
+            lines = message
+        else:
+            lines = str(message).splitlines()
+
+        player.center_print("\n".join(line.format(**format_kwargs) for line in lines))
+
+    @minqlx.delay(2)
+    def delayed_center_print(self, player, message, **format_kwargs):
+        self.center_print(player, message, **format_kwargs)
 
     def get_ffa_data(self, steam_id):
         try:
@@ -92,5 +149,5 @@ class welcome_stats(minqlx.Plugin):
             player = r.json().get("players", [{}])[0]
             ffa = player.get("ffa", {})
             return {"games": ffa.get("games", 0), "elo": ffa.get("elo", "—")}
-        except:
+        except Exception:
             return None
