@@ -2,7 +2,7 @@
 This is a plugin for minqlx created by Metal Fan (fan4_metal@mail.ru)
 Copyright (c) 2025 Metal Fan
 
-Version 0.3
+Version 0.4
 
 Its purpose is to display welcome message and some information about the players.
 """
@@ -30,6 +30,10 @@ class welcome_stats(minqlx.Plugin):
         super().__init__()
         self.center_printed = set()
 
+        # Cvar для включения/отключения кастомных приветственных сообщений.
+        # Установить 0 в конфиге сервера, чтобы отключить: set qlx_wsSpecialMsg "0"
+        self.set_cvar_once("qlx_wsSpecialMsg", "1")
+
         # Правильная регистрация команды!
         self.add_command(("info", "stats"), self.cmd_info, usage="<id | steam_id>")
 
@@ -56,14 +60,18 @@ class welcome_stats(minqlx.Plugin):
                 msg = f"^7Welcome, ^5{name}^7! Tracked games: ^2{games}^7, FFA ELO: {elo_str}"
             self.chat_reply(msg)
 
-            special_msg = self.SPECIAL_WELCOME_MESSAGES.get(sid)
-            if special_msg:
-                self.chat_reply(special_msg, name=name, sid=sid)
+            if self.get_cvar("qlx_wsSpecialMsg", bool):
+                special_msg = self.SPECIAL_WELCOME_MESSAGES.get(sid)
+                if special_msg:
+                    self.chat_reply(special_msg, name=name, sid=sid)
 
         fetch()
 
     def handle_player_loaded(self, player):
         if not player or player.steam_id < 10000000000000000:
+            return
+
+        if not self.get_cvar("qlx_wsSpecialMsg", bool):
             return
 
         sid = player.steam_id
